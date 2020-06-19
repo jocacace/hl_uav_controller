@@ -3,6 +3,20 @@
 using namespace Eigen;
 using namespace std;
 
+void HL_CONTROLLER::rotate( double angle ) {
+
+    tf::Quaternion q;
+    q.setRPY(0, 0, angle);
+    q = q.normalize();
+
+    _q_des(0) = q.w();
+    _q_des(1) = q.x();
+    _q_des(2) = q.y();
+    _q_des(3) = q.z();
+}
+
+
+
 void HL_CONTROLLER::takeoff( double altitude ) {
 
     //Set up control mode

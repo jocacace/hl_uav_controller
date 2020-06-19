@@ -91,6 +91,15 @@ void HL_CONTROLLER::state_machine() {
     _p_des = _w_p;
     takeoff(3.5);
     
+
+    string line;
+    getline(cin,line);
+
+    rotate(1.5);
+    getline(cin,line);
+    rotate(3.14);
+    getline(cin,line);
+    rotate(0.0);
     //manual_land();
 
 }

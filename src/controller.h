@@ -9,6 +9,7 @@
 #include "mavros_msgs/SetMode.h"
 #include "mavros_msgs/CommandTOL.h"
 //---
+#include "tf/tf.h"
 #include "utils.h"
 #include "Eigen/Dense"
 
@@ -33,7 +34,7 @@ class HL_CONTROLLER {
     void manual_land();
     void velocity_controller();
     void position_controller();
-
+    void rotate( double angle );
 
   private:
     ros::NodeHandle _nh;
