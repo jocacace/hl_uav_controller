@@ -11,12 +11,25 @@
 //---
 #include "utils.h"
 #include "Eigen/Dense"
+#include "tf/tf.h"
+#include "motion_planner/generate_plan.h"
+
+#define FIELD_VOLUME 600 //m^3
+#define ELEMENTS 4 //elements number of the static agenda
+#define ALPHA 0.9 //percentual of the max volume accepted
 
 using namespace Eigen;
 using namespace std;
 
-
 enum CTRL_TYPE {velocity, position};
+
+struct Agenda{
+  string type;
+  int number;
+  geometry_msgs::Pose target_pose;
+  geometry_msgs::Pose robot_pose;
+  bool found;
+};
 
 class HL_CONTROLLER {
   public:
@@ -29,11 +42,24 @@ class HL_CONTROLLER {
     void localization_cb ( geometry_msgs::PoseStampedConstPtr msg );
     void publish_control();
 
-    void takeoff( double );
+    //--- Actions ---
+    //TO DO: rendere bool le funzioni di movimento, in modo che il controllo sappia quando è finito il movimento
+    void takeoff( const double );
+    void look_around(); 
+    void move_drone(const double, const double, const double, const double);
     void manual_land();
+
+    //--- Controllers ---
     void velocity_controller();
     void position_controller();
 
+    //--- Exploration ---
+    bool search_QR();
+    bool next_point();
+    bool measured_volume();
+    void check_agenda();
+    void explore();
+    double evaluate_volume();
 
   private:
     ros::NodeHandle _nh;
@@ -46,6 +72,8 @@ class HL_CONTROLLER {
     ros::Publisher _local_vel_pub;
     mavros_msgs::State _mstate;
 
+    motion_planner::generate_plan _plan;
+
     Eigen::Vector3d _w_p;
     Eigen::Vector4d _w_q;
 
@@ -54,8 +82,17 @@ class HL_CONTROLLER {
     Eigen::Vector3d _p_des;
     Eigen::Vector4d _q_des;
     Eigen::Vector3d _dp_des;
-    CTRL_TYPE _ctrl_mode;   
+    CTRL_TYPE _ctrl_mode; 
+
+    Agenda _objective_list[ELEMENTS];
+    double _measured_volume;
+    bool _first_iter;
     bool _first_w_mes;
+
+    bool _finish;
+    bool _in_flight;
+    bool _new_plan;
+    bool _moved;
 
     //geometry_msgs::Pose _w_pose;
 };
