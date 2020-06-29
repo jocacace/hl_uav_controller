@@ -3,21 +3,7 @@
 using namespace Eigen;
 using namespace std;
 
-void HL_CONTROLLER::rotate( double angle ) {
-
-    tf::Quaternion q;
-    q.setRPY(0, 0, angle);
-    q = q.normalize();
-
-    _q_des(0) = q.w();
-    _q_des(1) = q.x();
-    _q_des(2) = q.y();
-    _q_des(3) = q.z();
-}
-
-
-
-void HL_CONTROLLER::takeoff( double altitude ) {
+void HL_CONTROLLER::takeoff( const double altitude ) {
 
     //Set up control mode
     mavros_msgs::CommandBool arm_cmd;
@@ -40,7 +26,9 @@ void HL_CONTROLLER::takeoff( double altitude ) {
     }
 
     _p_des(2) += altitude;
-    _q_des = _w_q;
+    Vector3d rpy= utilities::R2XYZ ( utilities::QuatToMat ( Vector4d(_w_q(0), _w_q(1), _w_q(2), _w_q(3)) ) );
+    _yaw_des =  rpy(2);
+    _in_flight = true;
 
     //ROS_INFO("Takeoff required");
     //ros::Rate r(10);
@@ -73,6 +61,11 @@ void HL_CONTROLLER::takeoff( double altitude ) {
     //_ctrl_mode = velocity;
 }
 
+void HL_CONTROLLER::look_around(const double ang){
+    
+    ROS_INFO("looking around");
+    _yaw_des += ang;
+}
 
 void HL_CONTROLLER::velocity_controller( ) {
 
@@ -93,7 +86,6 @@ void HL_CONTROLLER::velocity_controller( ) {
 
 }
 
-
 void HL_CONTROLLER::manual_land( ) {
     bool done = false;
     Vector3d l_p = _w_p;
@@ -106,6 +98,7 @@ void HL_CONTROLLER::manual_land( ) {
     Vector3d dir_vec;
     kd << 0.5, 0.5, 1;
 
+    ROS_INFO("Landing");
     //Vector3d eu = utilities::R2XYZ ( utilities::QuatToMat(  _w_q ) );
     while ( !done ) {
         ep = l_p - _w_p;
