@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+
+<launch>
+  <node pkg="hl_uav_controller" type="hl_controller" name ="hl_controller" output="screen" >
+
+	<param name="ref_jerk_max" value="0.25" />
+	<param name="ref_acc_max" value="0.50" />
+	<param name="ref_vel_max" value="1.0" />
+	<param name="ref_o_jerk_max" value="0.25" />
+	<param name="ref_o_acc_max" value="0.50" />
+	<param name="ref_o_vel_max" value="1.0" />
+  </node>
+
+</launch>
