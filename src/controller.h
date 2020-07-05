@@ -36,6 +36,7 @@ class HL_CONTROLLER {
     void position_controller();
     void rotate( double angle );
 
+
   private:
     ros::NodeHandle _nh;
     ros::Subscriber _mavros_state_sub;
@@ -57,6 +58,7 @@ class HL_CONTROLLER {
     Eigen::Vector3d _dp_des;
     CTRL_TYPE _ctrl_mode;   
     bool _first_w_mes;
+
 
     //geometry_msgs::Pose _w_pose;
 };
