@@ -25,40 +25,20 @@ void HL_CONTROLLER::takeoff( const double altitude ) {
       ROS_INFO("Manual OFFBOARD enabled");
     }
 
-    _p_des(2) += altitude;
-    Vector3d rpy= utilities::R2XYZ ( utilities::QuatToMat ( Vector4d(_w_q(0), _w_q(1), _w_q(2), _w_q(3)) ) );
-    _yaw_des =  rpy(2);
+    _p_cmd(2) = altitude;
+    Vector3d rpy = utilities::R2XYZ ( utilities::QuatToMat ( Vector4d(_w_q(0), _w_q(1), _w_q(2), _w_q(3)) ) );
+    //_yaw_des =  rpy(2);
+
+
+    while( ( _p_des - _p_cmd).norm() > 0.1 ) 
+        usleep(0.1*1e6);
+
+
+    ROS_INFO("Takeoff completed");
     _in_flight = true;
 
-    //ROS_INFO("Takeoff required");
-    //ros::Rate r(10);
-    //double tc = 1.0/10.0;
-//
-    //bool done = false;
-    //Vector3d to_p = _w_p;
-    //to_p(2) += altitude;
-//
-    //Vector3d ep = to_p - _w_p;
-//
-    //Vector3d kp;
-    //kp << 3, 3, 3;
 
-    //Vector3d eu = utilities::R2XYZ ( utilities::QuatToMat(  _w_q ) );
-    
-    //_ctrl_mode = position;    
-    //while ( !done ) {
-//
-    //    ep = to_p - _w_p;
-    //    _dp_des = Vector3d::Zero();
-    //    _p_des = to_p;
-    //    _q_des = _w_q;
-//
-    //    if( ep.norm() < 0.1 ) done = true;
-    //    r.sleep();
-    //}
-    //cout << "Take off completed!" << endl;
-//
-    //_ctrl_mode = velocity;
+
 }
 
 void HL_CONTROLLER::look_around(const double ang){

@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+
+<launch>
+
+	<rosparam command="load" file="$(find hl_uav_controller)/config/param.yaml" />
+  <node pkg="hl_uav_controller" type="hl_controller" name ="hl_controller" output="screen" >
+	</node>
+</launch>	

@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+
+<launch>
+	<node pkg="tf" type="static_transform_publisher" name="d435_link" args="0.05 0.0 -0.05 0.0 1.0 0.0 /base_link /rgbd_camera_optical_frame 100"/> 
+
+
+</launch>

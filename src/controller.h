@@ -16,6 +16,9 @@
 #include "octomap/OcTree.h"
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
+#include <unordered_map>
+#include "lvision/codes.h"
+#include "lvision/code.h"
 
 #define FIELD_VOLUME 600 //m^3
 #define ELEMENTS 1 //elements number of the static agenda
@@ -27,6 +30,21 @@ using namespace Eigen;
 using namespace std;
 
 enum CTRL_TYPE {velocity, position};
+
+
+typedef struct S_tf {
+
+  ros::Time t;
+  string frame;
+  Matrix4d Hws;
+  bool ready;
+
+  S_tf () {
+    ready = false;
+    Hws = Matrix4d::Identity();
+  }
+
+}S_tf;
 
 struct Agenda{
   string type;
@@ -59,6 +77,10 @@ class HL_CONTROLLER {
     void velocity_controller();
     void position_controller();
 
+    //--- QR landing --
+    void test_landing();
+    void get_tfs();
+
 
     //--- Exploration ---
     bool search_QR();
@@ -72,6 +94,12 @@ class HL_CONTROLLER {
     bool finished_pos();
     bool finished_yaw();
 
+
+    void qr_d_cb( lvision::codes c );
+    void qr_f1_cb( lvision::codes c );
+    void qr_f2_cb( lvision::codes c );
+
+
     octomap::OcTree* _tree;
 
    
@@ -79,6 +107,7 @@ class HL_CONTROLLER {
     ros::NodeHandle _nh;
     ros::Subscriber _mavros_state_sub;
     ros::Subscriber _localization_sub;
+    ros::Subscriber _qr_d_cbs[3];
     ros::ServiceClient _arming_client;
     ros::ServiceClient _set_mode_client;
     ros::ServiceClient _land_client;
@@ -109,6 +138,12 @@ class HL_CONTROLLER {
     bool _finish;
     bool _in_flight;
     bool _moved;
+    std::unordered_map<std::string, Vector3d> _qrs[3];
+
+    string _fixed_frame;
+    string _camera_frame[3];
+
+    S_tf _sensors_tf[3];
 
 
     //geometry_msgs::Pose _w_pose;

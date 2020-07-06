@@ -14,7 +14,31 @@ HL_CONTROLLER::HL_CONTROLLER() {
     _local_vel_pub = _nh.advertise<geometry_msgs::Twist>("/mavros/setpoint_velocity/cmd_vel_unstamped", 0);
     _mavros_state_sub = _nh.subscribe( "/mavros/state", 0, &HL_CONTROLLER::mavros_state_cb, this);
     _localization_sub = _nh.subscribe( "/mavros/local_position/pose", 0, &HL_CONTROLLER::localization_cb, this);
+    _qr_d_cbs[0] = _nh.subscribe( "/d/qrcodes", 0, &HL_CONTROLLER::qr_d_cb, this);
+    _qr_d_cbs[1] = _nh.subscribe( "/f1/qrcodes", 0, &HL_CONTROLLER::qr_d_cb, this);
+    _qr_d_cbs[2] = _nh.subscribe( "/f2/qrcodes", 0, &HL_CONTROLLER::qr_d_cb, this);
+
     //---
+
+
+     if( !_nh.getParam("fixed_frame", _fixed_frame)) {
+        _fixed_frame = "odom";
+    }
+
+    if( !_nh.getParam("camera1_frame", _camera_frame[0])) {
+        _camera_frame[0] = "rgbd_camera_optical_frame";
+    }
+    if( !_nh.getParam("camera2_frame", _camera_frame[1])) {
+        _camera_frame[1] = "rgbd_camera_optical_frame";
+    }
+    if( !_nh.getParam("camera3_frame", _camera_frame[2])) {
+        _camera_frame[2] = "rgbd_camera_optical_frame";
+    }
+
+    /*if( !_nh.getParam("camera_frame", _camera_frame)) {
+        _camera_frame = " ";
+    }*/
+    
 
     load_targets();
 
@@ -59,10 +83,10 @@ void HL_CONTROLLER::pfilter(){
         ref_vel_max = 1.5;
     }
     if( !_nh.getParam("ref_omega", ref_omega)) {
-        ref_omega = 0.0;
+        ref_omega = 1.0;
     }
     if( !_nh.getParam("ref_zita", ref_zita)) {
-        ref_zita = 0.0;
+        ref_zita = 0.5;
     }
 
 
@@ -84,6 +108,10 @@ void HL_CONTROLLER::pfilter(){
     _p_cmd = _w_p;
     Vector3d rpy = utilities::R2XYZ ( utilities::QuatToMat ( Vector4d(_w_q(0), _w_q(1), _w_q(2), _w_q(3)) ) );
     _yaw_cmd = rpy(2);
+
+
+    cout << "_yaw_cmd: " << _yaw_cmd << endl;
+    
 
     _p_des = _p_cmd;
     _yaw_des = _yaw_cmd;
@@ -117,8 +145,6 @@ void HL_CONTROLLER::pfilter(){
         if(fabs(eyaw) > M_PI)
             eyaw = eyaw - 2*M_PI* ((eyaw>0)?1:-1);
 
-
-        //cout << "eyaw: " << eyaw << " - " << _yaw_cmd << " - " << _yaw_des << endl;
 
         for(int i=0; i<3; i++ ) {
             ddp(i) = ref_omega*ref_omega * ep(i) - 2.0 * ref_zita*ref_omega*ref_dp(i);
@@ -204,6 +230,8 @@ void HL_CONTROLLER::publish_control() {
         p_ctrl.pose.position.z = _p_des(2);
 
 
+        //cout << "_p_des: " << _p_des.transpose() << endl;
+
         tf::Quaternion q2e;
         q2e.setRPY(0, 0, _yaw_des);
         q2e = q2e.normalize();
@@ -216,11 +244,11 @@ void HL_CONTROLLER::publish_control() {
         _local_pos_pub.publish( p_ctrl );
 
         //Send tf
-        //transform.setOrigin(tf::Vector3(p_ctrl.pose.position.x, p_ctrl.pose.position.y, p_ctrl.pose.position.z));
-        //tf::Quaternion q(p_ctrl.pose.orientation.x, p_ctrl.pose.orientation.y, p_ctrl.pose.orientation.z, p_ctrl.pose.orientation.w);
-        //transform.setRotation(q);
-        //tf::StampedTransform stamp_transform(transform, ros::Time::now(), "odom", "desired_pose");
-        //broadcaster.sendTransform(stamp_transform);
+        transform.setOrigin(tf::Vector3(p_ctrl.pose.position.x, p_ctrl.pose.position.y, p_ctrl.pose.position.z));
+        tf::Quaternion q(p_ctrl.pose.orientation.x, p_ctrl.pose.orientation.y, p_ctrl.pose.orientation.z, p_ctrl.pose.orientation.w);
+        transform.setRotation(q);
+        tf::StampedTransform stamp_transform(transform, ros::Time::now(), "odom", "desired_pose");
+        broadcaster.sendTransform(stamp_transform);
 
     
         r.sleep();
@@ -261,10 +289,13 @@ void HL_CONTROLLER::state_machine() {
 
     while(!_first_w_mes) sleep(1);
     _ctrl_mode = position;
-    _p_des = _w_p;
+    _p_cmd = _w_p;
 
-    cout << "entrato \n";
-    explore();
+    test_landing();
+
+
+//    cout << "entrato \n";
+//    explore();
 /*
     ros::Rate rate(200);
     while(ros::ok()){

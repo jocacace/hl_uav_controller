@@ -1,0 +1,11 @@
+camera1_frame: rgbd_camera_optical_frame
+camera2_frame: rgbd_camera_optical_frame
+camera3_frame: rgbd_camera_optical_frame
+ref_jerk_max: 25.0
+ref_acc_max: 10.0
+ref_vel_max: 1.0
+ref_o_jerk_max: 25
+ref_o_acc_max: 10
+ref_o_vel_max: 1.0
+ref_omega: 0.8
+ref_zita: 0.5
